@@ -1,0 +1,12 @@
+*.log
+*.synctex.gz
+*_cache/
+*_files/
+*/*_files/
+*/*_cache/
+*.pdf
+*.html
+*/*.html
+*/*.pdf
+.Rproj.user/
+
