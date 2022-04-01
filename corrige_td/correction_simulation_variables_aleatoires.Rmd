@@ -1024,13 +1024,13 @@ Cette méthode permet donc d'avoir un estimateur sans biais de $J$ à partir de 
 
 On reprend l'exemple vu en cours d'introduction à la statistique bayésienne. Vous reprendrez le même modèle ainsi que les mêmes données utilisées.
 
-7. En utilisant le même prior que celui du cours, ainsi que le même loi de proposition $g$, implémentez l'algorithme d'acceptation rejet pour tirer selon le posterior. 
+7. En utilisant le même prior que celui du cours, ainsi que le même loi de proposition $g$, implémentez l'algorithme d'acceptation rejet pour tirer selon le posterior.
 Les algorithmes efficaces seront valorisés.
 
 \begin{Correction}
 \textit{On reprend les notations du cours (voir poly ou diapos)}
 
-Pour un échantillon observé $y_{1:n} = y_1,\dots, y_n$ et les covariables associées $\mathbf{x}_1,\dots,\mathbf{x}_n$, on pose un modèle probit. 
+Pour un échantillon observé $y_{1:n} = y_1,\dots, y_n$ et les covariables associées $\mathbf{x}_1,\dots,\mathbf{x}_n$, on pose un modèle probit.
 La vraisemblance est données par
 $$L(y_{1:n}\vert \theta,\mathbf{x}_{1:n}) = \prod_{k = 1}^n \underset{\text{Proba. présence}}{\phi(\mathbf{x}_k^T\theta)^{y_k}}\times \underset{\text{Proba. absence}}{(1 - \phi(\mathbf{x}_k^T\theta))}^{1 - y_k}$$
 où $\phi$ est la fonction de répartition d'une loi $\mathcal{N}(0, 1)$.
@@ -1039,7 +1039,7 @@ Sur les paramètres inconnus, on pose un prior $\pi(\theta)\sim \mathcal{N}(0, 4
 Le posterior est donc donné par:
 $$\pi(\theta \vert y_{1:n}, \mathbf{x}_{1:n}) \propto \pi(\theta) L(y_{1:n}\vert \theta, \mathbf{x}_{1:n}) \propto \frac{1}{64\pi^2}\text{e}^{-\frac{1}{8}\theta^T\theta} \prod_{k = 1}^n \phi(\mathbf{x}_k^T\theta)^{y_k} (1 - \phi(\mathbf{x}_k^T\theta))^{1 - y_k}$$
 
-On note 
+On note
 $$\tilde{\pi}(\theta \vert y_{1:n}, \mathbf{x}_{1:n})) = \frac{1}{64\pi^2}\text{e}^{-\frac{1}{8}\theta^T\theta} \prod_{k = 1}^n \phi(\mathbf{x}_k^T\theta)^{y_k} (1 - \phi(\mathbf{x}_k^T\theta))^{1 - y_k}$$
 Afin de simuler cette loi par acceptation rejet, on choisit comme loi de proposition la loi du prior (i.e. $g(\theta) = \pi(\theta)$).
 On remarque ainsi que pour tout $\theta$,
@@ -1065,16 +1065,16 @@ Notre algorithme pour obtenir un échantillon du posterior est donc le suivant:
 Vous donnerez également une estimation de $\mathbb{E}[\theta \vert y_{1:n}]$ ainsi que l'intervalle de confiance associé.
 
 \begin{Correction}
-La première chose à faire est d'écrire la fonction de vraisemblance. 
-Elle prendra en entrée un vecteur de $\beta$, une matrice $X$ qui est la matrice de 
-design, un vecteur $y$ de 0 et de 1, et un argument $\log$ qui sera utile pour éviter 
+La première chose à faire est d'écrire la fonction de vraisemblance.
+Elle prendra en entrée un vecteur de $\beta$, une matrice $X$ qui est la matrice de
+design, un vecteur $y$ de 0 et de 1, et un argument $\log$ qui sera utile pour éviter
 les problèmes numériques.
 \end{Correction}
 
 ```{r get_likelihood}
-get_likelihood <- function(beta_vec, 
-                           X, # Design matrix 
-                           y, # presence absence vector (numeric with 0 or 1) 
+get_likelihood <- function(beta_vec,
+                           X, # Design matrix
+                           y, # presence absence vector (numeric with 0 or 1)
                            return_log = FALSE){ # Return the loglikelihood, default: No
   X_beta <- as.numeric(X %*% beta_vec) # The as.numeric returns a vector
   log_phi <- pnorm(X_beta, log.p = T) # Evaluates the phi. Taking the log
@@ -1097,16 +1097,16 @@ On définit ensuite proprement la matrice de design ainsi que le vecteur de pres
 ```{r chargement_donnees_presence, message = FALSE}
 library(tidyverse)
 # Loading data
-donnees_presence <- read.table("https://papayoun.github.io/courses/2020_monte_carlo/enonces_td/donnees_presence.txt",  
-                               sep = ";", header = TRUE, 
+donnees_presence <- read.table("../enonces_td/donnees_presence.txt",
+                               sep = ";", header = TRUE,
                                colClasses = c(presence = "factor"))
 # Creating design matrix
 design_matrix <- donnees_presence %>% # A partir des données
-  select(-presence) %>% # On vire la colonne des presence 
+  select(-presence) %>% # On vire la colonne des presence
   as.matrix() %>% # On transforme en matrice
-  cbind(intercept = rep(1, nrow(.)), .) # On colle à gauche une colonne 
+  cbind(intercept = rep(1, nrow(.)), .) # On colle à gauche une colonne
 # remplie de 1 pour l'intercept
-y_vector <- donnees_presence %>% 
+y_vector <- donnees_presence %>%
   pull(presence) %>% # On extrait la colonne presence (de type factor)
   as.character() %>% # on transforme en string
   as.numeric() # on transforme en numérique
@@ -1115,9 +1115,9 @@ y_vector <- donnees_presence %>%
 \begin{Correction}
 \textbf{Détermination de $\tilde{M}$ par optimisation de la vraisemblance}
 
-Optimiser la vraisemblance du modèle probit est un problème classique en statistiques. 
+Optimiser la vraisemblance du modèle probit est un problème classique en statistiques.
 La plupart des logiciels le font dans des fonctions dédiées (la fonction \texttt{glm} dans R, par exemple).
-Ici, on peut utiliser une fonction d'optimisation numérique donnée par R (la fonction \texttt{optim}) pour le faire à notre place, de manière efficace. 
+Ici, on peut utiliser une fonction d'optimisation numérique donnée par R (la fonction \texttt{optim}) pour le faire à notre place, de manière efficace.
 Afin de savoir utiliser cette fonction, on se réfèrera à \texttt{help(optim)}.
 
 
@@ -1129,9 +1129,9 @@ Afin de savoir utiliser cette fonction, on se réfèrera à \texttt{help(optim)}
 # La fonction optim trouve le minimum d'une fonction
 # Donc on veut minimiser -log_vraisemblance
 M_tilde <- optim(par = rep(0, 4), # point de depart de l'algorithm
-                 fn = function(b){ # Fonction a minimiser, 
+                 fn = function(b){ # Fonction a minimiser,
                    # On met les bons parametres
-                   -get_likelihood(beta_vec = b, X = design_matrix, 
+                   -get_likelihood(beta_vec = b, X = design_matrix,
                                    y = y_vector, return_log = TRUE)
                    })  %>%  # Renvoie une liste
   {.$value * (-1)} %>% # dont on extrait la valeur du minimum * -1
@@ -1145,7 +1145,7 @@ On peut ainsi coder l'algorithme d'acceptation rejet. Dans cette fonction, en pr
 \end{Correction}
 
 ```{r get_sample_accept_reject}
-get_sample_accept_reject <- function(X, 
+get_sample_accept_reject <- function(X,
                                      y,
                                      M_bound){
   stop_condition <- FALSE # Stopping condition
@@ -1179,8 +1179,8 @@ set.seed(123) # Pour la reproductibilité
 acceptance_reject_candidates <- rerun(n_samples,
                                       get_sample_accept_reject(X = design_matrix,
                                                                y = y_vector,
-                                                               M = M_tilde)) %>% 
-  bind_rows(.id = "Replicate") 
+                                                               M = M_tilde)) %>%
+  bind_rows(.id = "Replicate")
 dim(acceptance_reject_candidates) # Dimension du résultat
 ```
 
@@ -1193,7 +1193,7 @@ Ici l'intervalle de confiance est fait composante par composante. Techniquement,
 \end{Correction}
 
 ```{r accepted_samples}
-accepted_samples <- acceptance_reject_candidates %>% 
+accepted_samples <- acceptance_reject_candidates %>%
   filter(accepted) %>% # On ne garde que les acceptes
   mutate(Replicate = as.numeric(Replicate)) %>% # On crée modifie Replicate
   select(-accepted) %>% # On vire la colonne accepted
@@ -1202,21 +1202,21 @@ accepted_samples <- acceptance_reject_candidates %>%
 
 # Plot posterior densities
 ggplot(accepted_samples) +
-  aes(x = value) + 
+  aes(x = value) +
   geom_density(aes(fill = parameter), alpha = 0.5) +
   labs(x = "Valeur", y = "Densité", fill = "Paramètre",
        title = "Densité a posteriori estimées")
 
 # Intervalle de confiance a posteriori pour la moyenne
-accepted_samples %>% 
-  group_by(parameter) %>% 
+accepted_samples %>%
+  group_by(parameter) %>%
   summarise(ic_95_inf = mean(value) - 1.96 * sqrt(var(value) / n()),
             posterior_mean = mean(value),
             ic_95_sup = mean(value) + 1.96 * sqrt(var(value) / n()))
 ```
 
 
-9. À partir de cette méthode, et en utilisant les questions 3 et 4, donner une estimation ainsi qu'un intervalle de confiance pour à 95\% de la quantité 
+9. À partir de cette méthode, et en utilisant les questions 3 et 4, donner une estimation ainsi qu'un intervalle de confiance pour à 95\% de la quantité
 $$\int_{\mathbb{R}^4}\pi(\theta)L(y_{1:n}\theta) \text{d} \theta$$
 
 \begin{Correction}
@@ -1225,9 +1225,9 @@ On note \texttt{I\_hat} la quantité recherchée
 \end{Correction}
 
 ```{r nb_essais}
-nb_essais <- acceptance_reject_candidates %>% 
-  group_by(Replicate) %>% 
-  summarise(nb_essai = n()) %>% 
+nb_essais <- acceptance_reject_candidates %>%
+  group_by(Replicate) %>%
+  summarise(nb_essai = n()) %>%
   pull(nb_essai)
 tau_hat <- mean(nb_essais)
 I_hat <- M_tilde / tau_hat # Estimation
@@ -1244,7 +1244,7 @@ Donnez un intervalle de confiance asymptotique pour l'estimation obtenue.
 À $M$ connu, la réponse est un application directe de la section précédente. Malheureusement, ici, on ne connait que $\tilde{M}$. Par l'exercice précédent (pour une densité cible $f$ connue seulement au travers de $\tilde{f}$), on sait que pour chaque $\tilde{M}$ valable, correspond un $M = \frac{\tilde{M}}{I(\tilde{f})}$. Dans ce cas, effectuer l'acceptation rejet avec $f$, $g$ et $M$ est équivalent (en terme de probabilité d'acceptation) qu'effectuer l'acceptation rejet avec $\tilde{f}$, $g$. Il suffit donc de remplacer M par $\tilde{M} / I(\tilde{f})$ dans la formule et tout doit fonctionner.
 
 Malheureusement $I(\tilde{f})$ est inconnue.
-En remplaçant $\tilde{M} / I(\tilde{f})$ par son estimateur Monte Carlo naturel qui est $\hat{M} = \frac{\tilde{M}}{\hat{I}_n(\tilde{f})} = \frac{N}{n}$, on obtient l'estimateur 
+En remplaçant $\tilde{M} / I(\tilde{f})$ par son estimateur Monte Carlo naturel qui est $\hat{M} = \frac{\tilde{M}}{\hat{I}_n(\tilde{f})} = \frac{N}{n}$, on obtient l'estimateur
 $$\tilde{J}_n = \frac{1}{N} \left(\sum_{i = 1}^n \varphi(X_i) + (\frac{N}{n} - 1) \sum_{j = 1}^{N - n} \frac{\tilde{f}(Z_j)}{\tilde{M}g(Z_j) - \tilde{f} (Z_j)}\varphi(Z_j) \right)$$
 
 Cet estimateur est désormais biaisé, mais consistant.
@@ -1268,7 +1268,7 @@ get_is_weight <- function(beta_vec, M_estimate, M_tilde,
                           accepted = FALSE){
   if(!accepted){
     f_beta <- get_f(beta_vec)
-    return((M_estimate - 1) * f_beta / 
+    return((M_estimate - 1) * f_beta /
              (M_tilde * get_g(beta_vec) - f_beta))
   }
   else
@@ -1279,33 +1279,33 @@ get_is_weight <- function(beta_vec, M_estimate, M_tilde,
 ```{r estimates_recyling_ar}
 # Ici, un peu de préparation de donnees
 # On cree un tableau ayant en colonne les argiments nécessaires
-arguments_tibble <- 
-  acceptance_reject_candidates %>% 
-  select(-Replicate) %>% 
-  rowid_to_column(var = "index") %>% 
-  nest(beta_vec = c(beta_0, beta_1, beta_2, beta_3)) %>% 
-  mutate(beta_vec = map(beta_vec, function(x) as.numeric(x))) %>% 
+arguments_tibble <-
+  acceptance_reject_candidates %>%
+  select(-Replicate) %>%
+  rowid_to_column(var = "index") %>%
+  nest(beta_vec = c(beta_0, beta_1, beta_2, beta_3)) %>%
+  mutate(beta_vec = map(beta_vec, function(x) as.numeric(x))) %>%
   select(-index)
 # Maintenant, on cree le bon tableau
-estimates_recyling_ar <- acceptance_reject_candidates %>% 
-  mutate(is_weights = pmap_dbl(.l = arguments_tibble, .f = get_is_weight, 
-                               M_estimate = tau_hat, M_tilde = M_tilde)) %>% 
-  mutate(iteration = 1:n()) %>% 
-  mutate_at(.vars = vars(starts_with("beta_")), 
-            .funs = function(colonne) cumsum(colonne * .$is_weights) / .$iteration) %>% 
-  mutate(methode = "AR + Recyclage") %>% 
+estimates_recyling_ar <- acceptance_reject_candidates %>%
+  mutate(is_weights = pmap_dbl(.l = arguments_tibble, .f = get_is_weight,
+                               M_estimate = tau_hat, M_tilde = M_tilde)) %>%
+  mutate(iteration = 1:n()) %>%
+  mutate_at(.vars = vars(starts_with("beta_")),
+            .funs = function(colonne) cumsum(colonne * .$is_weights) / .$iteration) %>%
+  mutate(methode = "AR + Recyclage") %>%
   select(-Replicate, -accepted, -is_weights) %>%
   slice(seq(1, n(), by = 100)) %>% # Only kepp one point in 100
   gather(-iteration, -methode, key = "Parametre", value = "value")
 ```
 
 ``````{r estimates_classic_ar}
-estimates_classic_ar <- acceptance_reject_candidates %>% 
-  filter(accepted) %>% 
-  mutate(iteration = 1:n()) %>% 
-  mutate_at(.vars = vars(starts_with("beta_")), 
-            .funs = function(colonne) cumsum(colonne) / .$iteration) %>% 
-  mutate(methode = "AR classique") %>% 
+estimates_classic_ar <- acceptance_reject_candidates %>%
+  filter(accepted) %>%
+  mutate(iteration = 1:n()) %>%
+  mutate_at(.vars = vars(starts_with("beta_")),
+            .funs = function(colonne) cumsum(colonne) / .$iteration) %>%
+  mutate(methode = "AR classique") %>%
   select(-Replicate, -accepted) %>%
   gather(-iteration, -methode, key = "Parametre", value = "value")
 # On crée une colonne de poids, valant 1 si l'échantillon a été accetpé,
@@ -1326,8 +1326,8 @@ On peut ainsi voir ici qu'inclure tous les échantillons peut venir au prix d'un
 \end{Correction}
 
 ```{r comparaison_estimateur_esperances, fig.width = 5, fig.height = 3.5}
-bind_rows(estimates_recyling_ar, 
-          estimates_classic_ar) %>% 
+bind_rows(estimates_recyling_ar,
+          estimates_classic_ar) %>%
   ggplot(aes(x = iteration, y = value)) +
   geom_path(aes(color = Parametre)) +
   facet_wrap(.~methode, scales = "free_x") +

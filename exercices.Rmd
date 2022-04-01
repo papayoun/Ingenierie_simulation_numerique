@@ -42,6 +42,29 @@ $$I = \int_0^1\sin\left(\log(x)\right)\text{d}x,~~J = \int_{-\infty}^{+\infty}x^
 
 4. Représentez graphiquement l'évolution de votre estimation en fonction de $M$ ainsi que l'intervalle de confiance associé.
 
+# Aiguille de Buffon
+
+Au XVIIIe siècle,  naturaliste Georges Louis Leclerc de Buffon pose le problème suivant:
+
+On considère un parquet avec une infinité de lattes de longueurs infinies, toutes de largeur 1.
+On considère ensuite l'expérience suivante:
+On jette une aiguille de longueur 1 en l'air, qui retombe ensuite sur le parquet.
+On cherche alors à calculer la probabilité que l'aiguille croise le bord d'une des lattes.
+
+Le centre de l'aiguille tombant toujours entre deux lattes, on notera $X$ la variable aléatoire correspondant à son ordonnée (on visualisera les lattes comme disposées "horizontalement"), comprise entre 0 et 1.
+
+On notera $\theta$ l'angle formé par l'aiguille avec l'horizontale. $\theta$ est donc compris entre 0 et $\frac{\pi}{2}$.
+
+On suppose que $X$ et $\theta$ sont deux variables aléatoires indépendantes distribuées selon des lois uniformes sur $[0, 1]$ et $[0 ,\frac{\pi}{2}]$ respectivement.
+
+1. Montrer que la probabilité qu'une aiguille croise une latte dans ces conditions est de
+$\frac{2}{\pi}$.
+2. Proposer un estimateur Monte Carlo de cette probabilité.
+3. En déduire un estimateur de Monte Carlo de la valeur de $\pi$.
+4. Donner un intervalle de confiance asymptotique à 95% pour cet estimateur.
+5. Sur `R`, tracez, en fonction du nombres de simulation de Monte Carlo, l'estimation de $\pi$ trouvée.
+6. La vitesse d'approximation de $\pi$ vous semble t'elle bonne?
+
 
 # Une comparaison avec l'intégration numérique
 
@@ -204,4 +227,147 @@ bind_rows(mutate(my_monte_carlo_estimate,
  
 4. Implémenter cet estimateur sur `R` avec $\lambda = 4.5$ et le comparer à celui de Monte Carlo.
 
-# Simulation de variable aléatoire
+# Détection d'aggrégats dans une série temporelle
+
+## Présentation du problème 
+
+On s'intéresse à une série temporelle à valeurs dans $\mathbb{R}$. Ainsi, les données
+consistent en un vecteur $X_{1:n} = (X_1,\dots X_n)$ de valeurs ordonnées dans le temps.
+
+La question est la suivante: *Existe-t-il une fenêtre temporelle de valeurs anormalement élevées?*.
+
+Pour cela, on se propose de faire le test 
+
+- $H_0$: Les variables aléatoires $X_1,\dots, X_n$ sont indépendantes et identiquement distribuées.
+- $H_1$: Il existe une fenêtre temporelle où les valeurs de la série sont plus importantes.
+
+Pour tester cette hypothèse, pour une série temporelle $X_{1:n} = (X_1,\dots, X_n)$, on va définir une statistique de test $T(X_{1:n})$. 
+
+
+Pour l'échantillon aléatoire $X_1,\dots X_n$, on note $R_k$ le rang de $X_k$ parmi les valeurs de l'échantillon (il est égal à 1 si $X_k$ est la valeur la plus faible, à $n$ si $X_k$ est la valeur la plus élevée). 
+Comme on considère des variables aléatoires continues, on considère dans la suite que deux rangs ne peuvent pas être égaux. 
+**Vous remarquerez que l'hypothèse H0 ne fait pas d'hypothèse sur la distribution des valeurs observées, en effet, H0 fait une hypothèse sur la distribution jointe des rangs**.
+
+1. Justifier que, sous $H_0$, la loi de $R_k$ est une loi uniforme discrète sur 
+$\left\lbrace 1,\dots,n\right\rbrace$. Quelle est la loi de $R_k$ sachant $R_\ell$ ($\ell\neq k$)? 
+
+Pour tout couple $(i, j)$ tel que $1 \leq i\leq j\leq n$ on considère la variable aléatoire suivante:
+
+$$S(i, j) = \sum_{k = i}^j R_k.$$
+
+2. Que représente cette variable aléatoire? Dans quel cas prendra t'elle des grandes valeurs?
+  
+3. Montrer que, sous $H_0$, $m_{ij} := \mathbb{E}[S(i,j)] = \frac{1}{2}(n+1)(j-i+1)$ pour tout couple  $(i,j)$.
+  
+4. Calculer, sous $H_0$, $v_{ij} :=  \mathbb{V}[S(i,j)] =  \frac{1}{12}(n+1)(j-i+1)(n-j+i-1)$ pour tout couple $(i,j)$.
+  
+On définit maintenant la variable aléatoire centrée et réduite, pour tout couple d'entiers
+ $(i, j)$ tel que $1 \leq i\leq j\leq n$.
+$$T(i, j) = \left\lbrace \begin{array}{lr}
+0&\text{ si } i = 1 \text{ et } j = n\\
+\frac{S(i, j) - m_{ij}}{\sqrt{v_{ij}}} & \text{ sinon.} 
+\end{array}
+\right.$$
+
+Notre statistique de test $T_n(X_{1:n})$ sera donc donnée par 
+\begin{equation}
+\label{eq:stat:T}
+T_n(X_{1:n}) = \underset{1 \leq i\leq j\leq n}{\text{max}} T(i, j).
+\end{equation}
+
+## Principe du test et prise de décision par méthode de Monte Carlo.
+
+Le principe du test est le suivant: pour un échantillon observé $\mathbf{x}$ un risque $\alpha$, on rejette $H_0$ si $T_n(\mathbf{x}) > t_{1 - \alpha}$ où $t_{1 - \alpha}$ est le quantile d'ordre $\alpha$ de la loi de $T_n(\mathbf{X})$. 
+On concluera que la fenêtre temporelle pour laquelle la statistique est calculée (soit $(i_{\text{max} },j_{\text{max}}) = \text{argmax}_{i,j}~T(i,j)$) est anormalement loin de 0 sous $H_0$. 
+On rejettera alors $H_0$ pour conclure a un aggrégat de valeurs élevées sur cette fenêtre.
+
+5. La loi de $T_n$ sous $H_0$ étant inconnue, on se propose d'approcher ses quantiles sous $H_0$ par méthode de Monte Carlo. 
+Donner un algorithme simple de simulation de $T_n$ sous $H_0$.
+
+6. Proposer une méthode de Monte Carlo pour répondre à la question initiale à un risque $\alpha$ fixé,  pour n'importe quelle série temporelle observée $x_{1:n}$.
+
+## Implémentation sous R pour les températures à Hobart, Tasmanie.
+
+7. Ecrire une fonction `get_tn`, qui pour une série temporelle $x_{1:n}$ donnée, calcule $T_n(x_{1:n})$ et, si on le demande, renvoit les indices temporels de la fenêtre sur laquelle cette statistique est obtenue. Calculer cette statistique de test pour la série des températures à Hobart. On notera cette valeur $t^*$
+
+8. Ecrire une fonction `get_h0_sample` qui, pour un entier $n$ et un entier $M$ permet 
+d'obtenir $M$ réalisations de $T_n$ sous $H_0$.
+
+9. Simuler un $M$ échantillon de $T_n$ sous $H_0$ pour une valeur de $n$ correspondant
+à celles des données d'Hobart. Vous prendrez $M = 5000$. 
+Représenter l'estimation obtenue de $\mathbb{P}(T_n > t^*)$ ainsi que son intervalle de confiance asymptotique à 95%. 
+
+10. Répondre à la question initiale sur les températures à Hobart
+
+
+## Génération de loi uniforme
+
+1. À l'aide du logiciel R, programmez un générateur à congruences pour la loi
+uniforme. Ce générateur prendra la forme d'une fonction prenant en argument:
+
+- Un entier `n` donnant la taille de l'échantillon voulu.
+- 4 entiers `a, m, c, x0` correspondant aux paramètres du générateurs vu en cours.
+
+2. À l'aide de cette fonction, générer un échantillon de taille 10000 
+pour les valeurs
+
+- `a = 41358`
+- `m = 2^31 -1`
+- `c = 0`
+
+et la graine de votre choix. Refaites la même procédure avec 
+
+- `a = 3`
+- `m = 2^31 -1`
+- `c = 0`
+
+et 
+
+- `a = 101`
+- `m = 2311`
+- `c = 0`
+
+Vous stockerez chacun des échantillons obtenus
+
+3. Pour chacun des échantillons obtenus, tracez l'histogramme empirique.
+Quels échantillons vous semblent tirés selon une loi uniforme $U[0, 1]$?
+En utilisant la fonction `ks.test`, effectuez un test de Kolmogorov-Smirnoff
+d'adéquation pour la loi uniforme. 
+Que concluez vous sur la qualité des 3 générateurs?
+
+4. Pour chacun des échantillons $(u_1,\dots, u_{10000})$ obtenus, tracez $u_n$ en fonction
+de $u_{n-1}$. Que pouvez vous conclure sur la qualité des 3 générateurs?
+
+
+## Loi exponentielle
+
+On rappelle qu'une variable aléatoire $X$ est de loi exponentielle de paramètre $\lambda > 0$
+si elle a pour fonction de densité
+$f_X(x) = \lambda\text{e}^{-\lambda x} \mathbf{1}_{x\geq0}$
+
+1. En utilisant la méthode d'inversion, proposez un algorithme de simulation pour une variable aléatoire exponentielle.
+
+2. Ecrire une fonction `R` mettant en oeuvre cette algorithme. Cette fonction prendra 
+deux paramètres en entrée: 
+
+- `n` La taille de l'échantillon;
+- `lambda` Le paramètre de la loi exponentielle
+
+Vous testerez la qualité de votre fonction sur un échantillon de taille 10000,
+en comparant graphiquement l'histogramme empirique obtenu à la densité de la loi exponentielle correspondante.
+
+## Loi uniforme sur le disque unité
+
+1. À partir d'une variable aléatoire uniforme sur $[0, 1]$, proposez une transformation 
+pour simuler une loi uniforme sur $[-1, 1]$.
+
+2. Proposer une méthode d'acceptation rejet pour simuler, à partir de deux variables 
+aléatoires indépendantes de loi uniforme sur $[-1, 1]$,  une variable aléatoire uniforme sur le disque unité.
+
+3. Quelle est la probabilité d'acceptation de l'algorithme?
+
+4. Ecrire une fonction `R` mettant en place la génération de variables aléatoires sur le disque unité.
+Dans cet algorithme, gardez en mémoire le nombre d'essais nécessaire avant chaque acceptation.
+
+5. Générer un échantillon de taille 10000. Vérifiez graphiquement que ces points sont 
+uniformément répartis sur le disque unité. Vérifiez également que le nombre d'essais moyens avant acceptation est en adéquation avec ce qui est attendu.
